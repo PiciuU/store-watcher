@@ -5,6 +5,7 @@ namespace App;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
@@ -37,7 +38,8 @@ class Router
             $classInstance = new $className();
 
             // Add routes as paramaters to the next class
-            $params = array_merge(array_slice($matcher, 2, -1), array('routes' => $routes));
+            if (ROUTING_TYPE == 'api') $params = array_merge(array_slice($matcher, 2, -1), array('request' => $request));
+            else $params = array_merge(array_slice($matcher, 2, -1), array('routes' => $routes));
 
             call_user_func_array(array($classInstance, $matcher['method']), $params);
 
@@ -53,13 +55,4 @@ class Router
 
 // Invoke
 $router = new Router();
-
-if (str_starts_with($_SERVER['REQUEST_URI'], '/api')) {
-    require_once __DIR__.'/../routes/api.php';
-    return response()->json("test");
-}
-else {
-    require_once __DIR__.'/../routes/web.php';
-}
-
 $router($routes);

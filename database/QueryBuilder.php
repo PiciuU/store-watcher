@@ -2,47 +2,58 @@
 
 namespace Database;
 
-class QueryBuilder
+class QueryBuilder extends QueryRaw
 {
-    const PARAM_INT = 1;
-    const PARAM_STR = 2;
+    private static $instance;
+    private static $table = null;
 
-    private $db = null;
+    private $fields = ['*'];
+    private $conditions = [];
+    private $limit = null;
 
-    private $params = array();
+    public static function instance() {
+        if (!self::$instance) {
+            self::$table = static::$table;
+            self::$instance = new QueryBuilder();
+        }
+        return self::$instance;
+    }
 
-    private $query = null;
-
-
-    public function params(array ...$params) {
-        $this->params = $params;
+    public function select(array $fields = ['*']) {
+        $this->fields = $fields;
         return $this;
     }
 
-    public function query(string $query) {
-        $this->query = $query;
+    public function where($arg0, $arg1, $arg2 = null) {
+        $condition = (object)[
+            'field' => $arg0,
+            'operator' => $arg2 === null ? '=' : $arg1,
+            'value' => $arg2 === null ? $arg1 : $arg2
+        ];
+        self::createParamFromCondition($condition);
+        array_push($this->conditions, "$condition->field $condition->operator :$condition->field");
         return $this;
     }
 
-    public function fetch($fetchAsObject = false) {
-        $db = new DatabaseConnection();
-        $db_result = $db->fetch($this->query, $this->params, $fetchAsObject);
-
-        if ($db_result === false) {
-            echo "Błąd fetch: ".$db->getErrMsg();
-        }
-
-        return $db_result;
+    public function first(int $limit) {
+        if ($limit > 0) $this->limit = $limit;
+        return $this;
     }
 
-    public function execute() {
-        $db = new DatabaseConnection();
-        $db_result = $db->execute($this->query, $this->params);
+    public function get($fetchAsObject = false) {
+        $where = $this->conditions === [] ? '' : ' WHERE ' . implode(' AND ', $this->conditions);
+        $this->query = 'SELECT ' . implode(', ', $this->fields)
+            . ' FROM ' . self::$table
+            . $where;
 
-        if ($db_result === false) {
-            echo "Błąd execute: ".$db->getErrMsg();
-        }
-
-        return $db_result;
+        if ($this->limit) $this->query .= ' LIMIT '.$this->limit;
+        return self::fetch($fetchAsObject);
     }
+
+    public function createParamFromCondition($condition) {
+        array_push($this->params,
+            array($condition->field, $condition->value, is_numeric($condition->value) ? self::PARAM_INT : self::PARAM_STR)
+        );
+    }
+
 }

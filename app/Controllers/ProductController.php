@@ -3,24 +3,33 @@
 namespace App\Controllers;
 
 use App\Models\Product;
-use Database\QueryBuilder;
+
 use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\HttpFoundation\Request;
+use Services\Support\Response;
 
-class ProductController extends QueryBuilder {
-    // Show the product attributes based on the id.
-	public function showAction(int $id, RouteCollection $routes)
-	{
-        $product = new Product();
-        $product->read($id);
+use Database\QueryRaw;
 
-        // $products = QueryBuilder::params(
-        //     array('url', 'https://www.morele.net/karta-graficzna-palit-geforce-rtx-3050-stormx-8gb-gddr6-ne63050019p1-190af-9710311/', QueryBuilder::PARAM_STR),
-        //     array('name', "Karta graficzna Palit Geforce RTX 3050", QueryBuilder::PARAM_STR)
-        // )->query("UPDATE products SET name = :name WHERE url = :url")->execute();
+class ProductController {
 
+    public function summary_builder(Request $request) {
 
+        print_r(Product::instance()->select(['*'])->where('id', 1)->get());
+        // print_r(
+        //     Product::instance()->select(['*'])
+        //         ->where('id', '1')
+        //         ->where('name', 'productName')
+        //         ->first(1)
+        //         ->get()
+        // );
+    }
 
-        require_once APP_ROOT . '/resources/views/product.php';
+    public function summary_raw(Request $request) {
+        print_r(QueryRaw::instance()->query("SELECT * FROM products")->fetch());
+    }
 
-	}
+    public function post(Request $request) {
+        echo $request->get('id');
+        Response::toJson();
+    }
 }

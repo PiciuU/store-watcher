@@ -1,24 +1,16 @@
 <?php
 
-use Symfony\Component\Routing\Route;
-use Symfony\Component\Routing\RouteCollection;
-
+use Services\Support\ApiRoute as Route;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for application.
-|
 */
-$routes = new RouteCollection();
 
-$routes->add('product', new Route(
-    constant('URL_SUBFOLDER') . '/product/{id}', array('controller' => 'ProductController', 'method'=>'showAction'), array('id' => '[0-9]+')));
+$routes = Route::createCollection();
 
-$routes->add('home', new Route(
-    constant('URL_SUBFOLDER').'/',
-    array('controller' => 'PageController', 'method' => 'render')
-));
+Route::get($routes, 'builder', '', [ProductController::class, 'summary_builder']);
+Route::get($routes, 'raw', '/raw', [ProductController::class, 'summary_raw']);
+Route::post($routes, 'product', '/getProduct', [ProductController::class, 'post']);
 

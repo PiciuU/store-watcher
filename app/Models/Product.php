@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-class Product {
+class Product extends Model {
+	protected static $table = 'products';
+
     protected $id;
     protected $url;
     protected $name;
@@ -75,23 +77,4 @@ class Product {
 	public function setUpdatedAt($updatedAt) {
 		$this->updatedAt = $updatedAt;
 	}
-
-    public function create(array $data)
-    {
-
-    }
-
-    public function read(int $id) {
-
-    }
-
-    public function update(int $id, array $data)
-    {
-
-    }
-
-    public function delete(int $id)
-    {
-
-    }
 }

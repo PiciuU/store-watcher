@@ -18,11 +18,11 @@ class DatabaseConnection {
     private $lastInsertId;
 
     public function __construct() {
-        $this->host = MYSQL_HOST;
-        $this->port = MYSQL_PORT;
-        $this->login = MYSQL_LOGIN;
-        $this->pass = MYSQL_PASS;
-        $this->db_name = MYSQL_DB;
+        $this->host = config('DB_HOST');
+        $this->port = config('DB_PORT');
+        $this->login = config('DB_USERNAME');
+        $this->pass = config('DB_PASSWORD');
+        $this->db_name = config('DB_USERNAME');
 
         $this->connect();
     }
@@ -68,6 +68,8 @@ class DatabaseConnection {
             $this->err_msg = $e->getMessage();
             print_r($e->getMessage());
             return false;
+        } finally {
+            self::disconnect();
         }
 
         if ($number > 0) return $number;
@@ -102,6 +104,8 @@ class DatabaseConnection {
         } catch(\PDOException $e) {
             $this->err_msg = $e->getMessage();
             return false;
+        } finally {
+            self::disconnect();
         }
 
         return $result;
@@ -117,5 +121,10 @@ class DatabaseConnection {
 
     public function rollback() {
         return $this->pdo->rollback();
+    }
+
+    public function disconnect() {
+        $this->pdo = null;
+        $this->connected = false;
     }
 }
