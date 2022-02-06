@@ -5,17 +5,21 @@ namespace Database;
 class QueryBuilder extends QueryRaw
 {
     private static $instance;
-    private static $table = null;
+    private $table = null;
 
-    private $fields = ['*'];
-    private $conditions = [];
-    private $limit = null;
+    protected $fields = ['*'];
+    protected $conditions = [];
+    protected $limit = null;
+
+    public function setTable($table) {
+        $this->table = $table;
+    }
 
     public static function instance() {
         if (!self::$instance) {
-            self::$table = static::$table;
             self::$instance = new QueryBuilder();
         }
+        self::$instance->table = static::$table;
         return self::$instance;
     }
 
@@ -35,17 +39,22 @@ class QueryBuilder extends QueryRaw
         return $this;
     }
 
-    public function first(int $limit) {
+    public function limit(int $limit) {
         if ($limit > 0) $this->limit = $limit;
         return $this;
+    }
+
+    public function first() {
+        $this->limit = 1;
+        $result = self::get();
+        return $result[0] ?? [];
     }
 
     public function get($fetchAsObject = false) {
         $where = $this->conditions === [] ? '' : ' WHERE ' . implode(' AND ', $this->conditions);
         $this->query = 'SELECT ' . implode(', ', $this->fields)
-            . ' FROM ' . self::$table
+            . ' FROM ' . $this->table
             . $where;
-
         if ($this->limit) $this->query .= ' LIMIT '.$this->limit;
         return self::fetch($fetchAsObject);
     }
@@ -56,4 +65,58 @@ class QueryBuilder extends QueryRaw
         );
     }
 
+    public function create(array $fields = []) {
+        $keys = array();
+        foreach($fields as $key => $value) {
+            array_push($keys, $key);
+            $condition = (object)[
+                'field' => $key,
+                'value' => $value
+            ];
+            self::createParamFromCondition($condition);
+        }
+        $this->query = 'INSERT INTO ' . $this->table . '(' . implode(', ', $keys) . ') VALUES(:' . implode(', :', $keys) . ')';
+        return self::execute();
+    }
+
+    public function update(array $fields = []) {
+        if ($this->isEmpty()) return false;
+        self::where('id', $this->getId());
+
+        $keys = array();
+        foreach($fields as $key => $value) {
+            array_push($keys, $key);
+            $condition = (object)[
+                'field' => $key,
+                'value' => $value
+            ];
+            self::createParamFromCondition($condition);
+        }
+        $this->query = 'UPDATE ' . $this->table . ' SET ';
+        foreach($keys as $index => $key) {
+            $this->query .= "$key = :$key";
+            if ($index !== array_key_last($keys)) $this->query .= ", ";
+        }
+
+        $this->query .= ' WHERE ' . implode(' AND ', $this->conditions);
+        $isExecuted = self::execute();
+
+        if ($isExecuted) $this->updateProperties($fields);
+
+        return $isExecuted;
+    }
+
+    public function delete() {
+        if ($this->isEmpty()) return false;
+        self::where('id', $this->getId());
+
+        $this->query = 'DELETE FROM ' . $this->table . ' WHERE ' . implode(' AND ', $this->conditions) . ' LIMIT 1';
+        $isExecuted = self::execute();
+
+        $this->clearProperties();
+
+        if ($isExecuted) $this->clearProperties();
+
+        return $isExecuted;
+    }
 }

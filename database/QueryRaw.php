@@ -33,22 +33,26 @@ class QueryRaw
     public function fetch($fetchAsObject = false) {
         $db = new DatabaseConnection();
         $db_result = $db->fetch($this->query, $this->params, $fetchAsObject);
-
-        if ($db_result === false) {
-            echo "Błąd fetch: ".$db->getErrMsg();
-        }
-
+        self::clearValues();
         return $db_result;
     }
 
     public function execute() {
         $db = new DatabaseConnection();
         $db_result = $db->execute($this->query, $this->params);
-
-        if ($db_result === false) {
-            echo "Błąd execute: ".$db->getErrMsg();
-        }
-
+        self::clearValues();
         return $db_result;
+    }
+
+    public function clearValues() {
+        $this->params = array();
+        $this->query = null;
+        $this->fields = ['*'];
+        $this->conditions = [];
+        $this->limit = null;
+    }
+
+    public function getLastInsertId() {
+        return DatabaseConnection::getLastInsertId();
     }
 }

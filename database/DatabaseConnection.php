@@ -15,7 +15,7 @@ class DatabaseConnection {
     private $connected = false;
 
     private $err_msg;
-    private $lastInsertId;
+    private static $lastInsertId;
 
     public function __construct() {
         $this->host = config('DB_HOST');
@@ -29,11 +29,11 @@ class DatabaseConnection {
 
     public function connect() {
         try {
-            $this->pdo = new PDO('mysql:host='.$this->host.';dbname='.$this->db_name.';port='.$this->port.';charset=utf8', $this->login, $this->pass);
-            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->pdo = new \PDO('mysql:host='.$this->host.';dbname='.$this->db_name.';port='.$this->port.';charset=utf8', $this->login, $this->pass);
+            $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             $this->connected = true;
             return true;
-        } catch(PDOException $e) {
+        } catch(\PDOException $e) {
             $this->err_msg = $e->getMessage();
             return false;
         }
@@ -43,8 +43,8 @@ class DatabaseConnection {
         return $this->err_msg;
     }
 
-    public function getLastInsertId() {
-        return $this->lastInsertId;
+    public static function getLastInsertId() {
+        return self::$lastInsertId;
     }
 
     public function execute($query, $params = null) {
@@ -63,10 +63,9 @@ class DatabaseConnection {
                 $number = $this->pdo->exec($query);
             }
 
-            $this->lastInsertId = $this->pdo->lastInsertId();
-        } catch(PDOException $e) {
+            self::$lastInsertId = $this->pdo->lastInsertId();
+        } catch(\PDOException $e) {
             $this->err_msg = $e->getMessage();
-            print_r($e->getMessage());
             return false;
         } finally {
             self::disconnect();

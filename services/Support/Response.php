@@ -33,5 +33,6 @@ abstract class Response {
     protected static function send(JsonResponse $response) {
         $response->sendHeaders();
         $response->sendContent();
+        exit();
     }
 }

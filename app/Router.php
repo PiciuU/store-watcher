@@ -13,10 +13,9 @@ use Symfony\Component\Routing\Exception\NoConfigurationException;
 
 class Router
 {
-    public function __invoke(RouteCollection $routes)
+    public function __invoke(Request $request, RouteCollection $routes)
     {
         $context = new RequestContext();
-        $request = Request::createFromGlobals();
         $context->fromRequest(Request::createFromGlobals());
 
         // Routing can match routes with incoming requests
@@ -39,7 +38,7 @@ class Router
 
             // Add routes as paramaters to the next class
             if (ROUTING_TYPE == 'api') $params = array_merge(array_slice($matcher, 2, -1), array('request' => $request));
-            else $params = array_merge(array_slice($matcher, 2, -1), array('routes' => $routes));
+            else $params = array_merge(array_slice($matcher, 2, -1), array('request' => $request, 'routes' => $routes));
 
             call_user_func_array(array($classInstance, $matcher['method']), $params);
 
@@ -55,4 +54,4 @@ class Router
 
 // Invoke
 $router = new Router();
-$router($routes);
+$router($request, $routes);

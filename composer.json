@@ -1,6 +1,6 @@
 {
 	"name": "piciuu/store-watcher",
-	"description": "Dreamcode framework v0.2",
+	"description": "Dreamfork - PHP framework v0.3",
 	"autoload": {
 		"psr-4": {
 			"App\\": "app/",

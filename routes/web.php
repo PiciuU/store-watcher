@@ -8,7 +8,11 @@ use Services\Support\WebRoute as Route;
 |--------------------------------------------------------------------------
 */
 
-$routes = Route::createCollection();
 
-Route::get($routes, 'home', '/', [PageController::class, 'renderHome']);
-Route::get($routes, 'product', '/product/{id}', [PageController::class, 'renderProduct'], array('id' => '[0-9]+'));
+$routes = Route::make();
+
+Route::guard($request, function() {
+    Route::get('home', '/', [PageController::class, 'renderHome']);
+}, function() {
+    Route::get('login', '/', [PageController::class, 'renderLogin']);
+});
