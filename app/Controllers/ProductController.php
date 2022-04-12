@@ -2,34 +2,56 @@
 
 namespace App\Controllers;
 
-use App\Models\Product;
+use App\Controllers\UserProductController;
+use App\Controllers\ScrapController;
 
-use Symfony\Component\Routing\RouteCollection;
+use App\Models\Product;
+use App\Models\UserProduct;
+
 use Symfony\Component\HttpFoundation\Request;
 use Services\Support\Response;
-
-use Database\QueryRaw;
+use Services\Support\Validator;
 
 class ProductController {
 
-    public function summary_builder(Request $request) {
+    public function store(Request $request) {
+        $validator = new Validator($request);
 
-        print_r(Product::instance()->select(['*'])->where('id', 1)->get());
-        // print_r(
-        //     Product::instance()->select(['*'])
-        //         ->where('id', '1')
-        //         ->where('name', 'productName')
-        //         ->first(1)
-        //         ->get()
-        // );
-    }
+        $store_list = ['morele.net', 'proshop.pl'];
 
-    public function summary_raw(Request $request) {
-        print_r(QueryRaw::instance()->query("SELECT * FROM products")->fetch());
-    }
+        $validator->required(['store', 'url', 'price'])
+                ->type(['price', 'integer'])
+                ->in(['store', $store_list])
+                ->contains(['url', $validator->get('store')]);
 
-    public function post(Request $request) {
-        echo $request->get('id');
-        Response::toJson();
+        if ($validator->fails()) {
+            Response::failure($validator->errors());
+        }
+
+        $product = new Product(Product::instance()->where('url', $validator->get('url'))->first());
+
+        $product_id = $product->getId();
+
+        // Create product if not exists
+
+        if ($product->isEmpty()) {
+            if (Product::instance()->create([
+                'url' => $validator->get('url')
+            ]) === false) Response::failure("Nie udało się dodać nowego produktu.");
+            $product_id = Product::instance()->getLastInsertId();
+
+            $scraper = new ScrapController();
+            $scraper->scrapOne($request, $product_id, false);
+        }
+
+        // Add product observation
+
+        $controller = new UserProductController();
+
+        if (!$controller->create($request, $validator, $product_id)) Response::failure("Nie udało się dodać obserwacji wprowadzonego produktu, upewnij się czy nie obserwujesz już tego produktu.");
+
+        $user_product_id = UserProduct::instance()->getLastInsertId();
+
+        Response::success('Pomyślnie rozpoczęto obserwację produktu.', $controller->show($request, $user_product_id, false));
     }
 }

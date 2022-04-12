@@ -8,6 +8,7 @@ class Product extends Model {
     protected $id;
     protected $url;
     protected $name;
+	protected $image;
     protected $isAvailable;
     protected $lastKnownPrice;
     protected $lastAvailableAt;
@@ -36,6 +37,14 @@ class Product extends Model {
 
 	public function setName($name) {
 		$this->name = $name;
+	}
+
+	public function getImage() {
+		return $this->image;
+	}
+
+	public function setImage($image) {
+		$this->image = $image;
 	}
 
 	public function getIsAvailable() {

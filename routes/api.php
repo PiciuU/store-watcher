@@ -27,3 +27,6 @@ Route::guard($request, function() {
     Route::put('update-subscription', '/subscription', [SubscriberController::class, 'update']);
     Route::delete('delete-subscription', '/subscription', [SubscriberController::class, 'delete']);
 });
+
+Route::get('bot-scrap-all', '/scrap', [ScrapController::class, 'scrapAll']);
+Route::get('bot-scrap-one', '/scrap/{product_id}', [ScrapController::class, 'scrapOne'], array('product_id' => '[0-9]+'));

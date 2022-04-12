@@ -61,8 +61,13 @@ class QueryBuilder extends QueryRaw
 
     public function createParamFromCondition($condition) {
         array_push($this->params,
-            array($condition->field, $condition->value, is_numeric($condition->value) ? self::PARAM_INT : self::PARAM_STR)
+            array($condition->field, $condition->value, is_numeric($condition->value) && !$this->containsDecimal($condition->value) ? self::PARAM_INT : self::PARAM_STR)
         );
+    }
+
+    public function containsDecimal($value) {
+        if (strpos($value, ".") !== false) return true;
+        return false;
     }
 
     public function create(array $fields = []) {
